@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="plugin.video.punch" version="1.0.4" name="PUNCH!" provider-name="luizbafilho">
+<requires>
+  <import addon="xbmc.python" version="2.24.0"/>
+  <import addon="script.module.requests" version="2.12.4"/>
+</requires>
+<extension point="xbmc.python.pluginsource" library="default.py">
+  <provides>video</provides>
+</extension>
+<extension point="xbmc.addon.metadata">
+  <summary lang="en">PUNCH! Fansub</summary>
+  <description lang="en">Unofficial PUNCH! Fansub video plugin for Kodi.</description>
+  <disclaimer lang="en">Requires a paid PUNCH! Fansub account.</disclaimer>
+  <assets>
+    <icon>icon.png</icon>
+    <fanart>fanart.jpg</fanart>
+  </assets>
+</extension>
+</addon>
