@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import requests
 import urllib2
 from lib.simpleplugin import Plugin
@@ -7,29 +10,18 @@ import re
 
 plugin = Plugin()
 
-session = requests.Session()
-
-
-def get_user_input(title='', default_text='', hidden=False):
-    keyboard = xbmc.Keyboard('', title, hidden)
-    if default_text:
-        keyboard.setDefault(default_text)
-    keyboard.doModal()
-    return keyboard.getText() if keyboard.isConfirmed() else None
-
 def build_anime_list(animes):
     animes_list = []
     for anime in animes:
-        image = "https://punchsub.zlx.com.br/imagens/projetos/animes/%s_thumb2.jpg" % (anime[0])
+        image = "https://punchsub.zlx.com.br/imagens/projetos/animes/%s.jpg" % (anime[0])
         animes_list.append({
             'label': anime[1],
             'url': plugin.get_url(action='view', name=anime[1], id=anime[0]),
             'thumb': image,
             'icon': image,
-            'fanart': image,
             'poster': image
         })
-    return animes_list
+    return Plugin.create_listing(animes_list, content="tvshows",  view_mode=500)
 
 @plugin.mem_cached(1440)
 def login():
@@ -44,6 +36,7 @@ def login():
         'cache-control': "no-cache"
         }
 
+    session = requests.Session()
     session.request("POST", url, data=payload, headers=headers)
     return session.cookies
 
@@ -60,8 +53,8 @@ def get_episodes(id):
 @plugin.action()
 def root():
     return [{
-                'label': "Procurar",
-                'url': plugin.get_url(action='search')
+                'label': "Últimos Lançamentos",
+                'url': plugin.get_url(action='latest')
             },
             {
                 'label': "Todos",
@@ -74,12 +67,9 @@ def root():
         ]
 
 @plugin.action()
-def search():
-    search_string = get_user_input("Search for anime")
-    if search_string:
-        animes = get_animes()
-        filtered = filter(lambda k: search_string in k[1].lower(), animes)
-        return build_anime_list(filtered)
+def latest():
+    animes = sorted(get_animes(), key=lambda k: k[9], reverse=True)
+    return build_anime_list(animes[0:29])
 
 @plugin.action()
 def list_by_letter(params):
@@ -92,7 +82,7 @@ def list_by_letter(params):
 def list_all():
     animes = get_animes()
 
-    return Plugin.create_listing(build_anime_list(animes), content="tvshows",  view_mode=500)
+    return build_anime_list(animes)
 
 @plugin.action()
 def letters():
@@ -122,7 +112,7 @@ def view(params):
         slug = episodes["p"][9]
 
         episodes_list.append({
-            'label': "Episodio {}".format(number),
+            'label': "Episódio {}".format(number),
             'thumb': "https://punchsub.zlx.com.br/imagens/projetos/screens/%s_%s.jpg" % (params.id, episode[2]),
             'url': plugin.get_url(action='play', id=id, slug=slug, number=number),
             'is_playable': True
@@ -134,7 +124,7 @@ def view(params):
 def play(params):
     cookies = login()
 
-    resp = session.post("https://punchsub.zlx.com.br/lista-episodios", cookies=cookies, data=[('ids[]', params.id)]).json()
+    resp = requests.post("https://punchsub.zlx.com.br/lista-episodios", cookies=cookies, data=[('ids[]', params.id)]).json()
     download_number = resp[params.id]["versao"].split("/")[1]
 
     url = "http://vip-validation2.punchsub.net/vip/vipDlRedir_1.php?downNum=%s&slug=%s-%s-hd&t=e" % (download_number, params.slug, params.number)
