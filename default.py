@@ -3,7 +3,7 @@
 
 import requests
 import urllib2
-from lib.simpleplugin import Plugin
+from resources.lib.simpleplugin import Plugin
 import string
 import xbmc
 import re

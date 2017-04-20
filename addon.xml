@@ -12,8 +12,8 @@
   <description lang="en">Unofficial PUNCH! Fansub video plugin for Kodi.</description>
   <disclaimer lang="en">Requires a paid PUNCH! Fansub account.</disclaimer>
   <assets>
-    <icon>icon.png</icon>
-    <fanart>fanart.jpg</fanart>
+    <icon>resources/media/icon.png</icon>
+    <fanart>resources/media/fanart.jpg</fanart>
   </assets>
 </extension>
 </addon>
