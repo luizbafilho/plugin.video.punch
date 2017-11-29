@@ -5,12 +5,14 @@ import requests
 import urllib2
 from resources.lib.simpleplugin import Plugin
 from punch import Punch, LoginError
+from anilist import Anilist
 import string
 import xbmc
 import re
 
 plugin = Plugin()
 punch = Punch(plugin.get_setting("username"), plugin.get_setting("password"))
+anilist = Anilist()
 
 def build_anime_list(animes):
     animes_list = []
@@ -50,8 +52,38 @@ def root():
             {
                 'label': "Por Letra",
                 'url': plugin.get_url(action='letters')
+            },
+            {
+                'label': "Temporada",
+                'url': plugin.get_url(action='season')
             }
         ]
+
+@plugin.action()
+def season():
+    result = anilist.get_animes({})
+    animes = result["data"]["Page"]["media"]
+    animes_list = []
+    for anime in animes:
+        image = anime["coverImage"]["large"]
+        animes_list.append({
+            'label': anime["title"]["romaji"],
+            'url': plugin.get_url(action='view', name="bla", id=10),
+            'art': {
+                'thumb': image,
+                'icon': image,
+                'poster': image,
+                'fanart': image,
+                'banner': anime['bannerImage']
+            },
+            'info': {
+                'video': {
+                    'plot': anime['description']
+                    }
+                }
+
+            })
+    return Plugin.create_listing(animes_list, content="tvshows",  view_mode=500)
 
 @plugin.action()
 def latest():

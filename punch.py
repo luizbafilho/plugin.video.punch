@@ -36,6 +36,11 @@ class Punch:
     def get_animes(self):
         return requests.get(self.base_url+'/lista-de-animes').json()
 
+    def search_anime(self, query):
+        animes = self.get_animes()
+        for anime in animes:
+            title = anime[1]
+
     def get_episodes(self, id):
         url = '%s/listar/%s/episodios/hd' % (self.base_url, id)
         return requests.get(url).json()
