@@ -4,7 +4,7 @@
 import requests
 import urllib2
 from resources.lib.simpleplugin import Plugin
-from punch import Punch
+from punch import Punch, LoginError
 import string
 import xbmc
 import re
@@ -109,7 +109,12 @@ def view(params):
 
 @plugin.action()
 def play(params):
-    return punch.get_playable_url({"id": params.id, "slug": params.slug, "number": params.number})
+    try:
+        url = punch.get_playable_url({"id": params.id, "slug": params.slug, "number": params.number})
+    except LoginError as e:
+        xbmc.executebuiltin('Notification(%s, %s, %d)' % ("Error",e.value, 5000))
+
+    return url
 
 if __name__ == '__main__':
     plugin.run()  # Start plugin

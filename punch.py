@@ -3,6 +3,12 @@
 
 import requests
 
+class LoginError(Exception):
+     def __init__(self, value):
+         self.value = value
+     def __str__(self):
+         return repr(self.value)
+
 class Punch:
     def __init__(self, username, password):
         self.base_url = "https://punchsub.com/"
@@ -11,6 +17,9 @@ class Punch:
         self.password = password
 
     def login(self):
+        if not self.username or not self.password:
+            raise LoginError("username or password undefined")
+
         url = self.base_url+"/login"
 
         payload = "login=%s&senha=%s&B1=Entrar&page=%s" % (self.username, self.password, "https://punchsub.com/principal")
