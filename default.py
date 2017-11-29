@@ -23,17 +23,18 @@ def build_anime_list(animes):
         })
     return Plugin.create_listing(animes_list, content="tvshows",  view_mode=500)
 
-@plugin.mem_cached(1440)
+# @plugin.mem_cached(1440)
 def login():
-    url = "https://punchsub.zlx.com.br/login"
+    url = "https://punchsub.com/login"
 
     username = plugin.get_setting("username")
     password = plugin.get_setting("password")
 
-    payload = "login=%s&senha=%s&B1=Entrar" % (username, password)
+    payload = "login=%s&senha=%s&B1=Entrar&page=%s" % (username, password, "https://punchsub.com/principal")
     headers = {
         'content-type': "application/x-www-form-urlencoded",
-        'cache-control': "no-cache"
+        'cache-control': "no-cache",
+        "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
         }
 
     session = requests.Session()
@@ -124,12 +125,18 @@ def view(params):
 def play(params):
     cookies = login()
 
-    resp = requests.post("https://punchsub.zlx.com.br/lista-episodios", cookies=cookies, data=[('ids[]', params.id)]).json()
-    download_number = resp[params.id]["versao"].split("/")[1]
+    headers = {
+        'user-agent': "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0",
+        'content-type': "application/x-www-form-urlencoded",
+    }
 
-    url = "http://vip-validation2.punchsub.net/vip/vipDlRedir_1.php?downNum=%s&slug=%s-%s-hd&t=e" % (download_number, params.slug, params.number)
+    payload = "ids[]="+params.id
+    resp = requests.post("https://punchsub.com/lista-episodios", headers=headers, cookies=cookies, data=payload)
+    down_link = "https://punchsub.com/%s/%s-%s-hd" % (resp.json()[params.id]["versao"], params.slug, params.number)
 
-    return url
+    resp = requests.get(down_link, headers=headers, cookies=cookies, allow_redirects=False)
+
+    return resp.headers["Location"]
 
 if __name__ == '__main__':
     plugin.run()  # Start plugin
