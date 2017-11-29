@@ -4,11 +4,13 @@
 import requests
 import urllib2
 from resources.lib.simpleplugin import Plugin
+from punch import Punch
 import string
 import xbmc
 import re
 
 plugin = Plugin()
+punch = Punch(plugin.get_setting("username"), plugin.get_setting("password"))
 
 def build_anime_list(animes):
     animes_list = []
@@ -25,31 +27,15 @@ def build_anime_list(animes):
 
 # @plugin.mem_cached(1440)
 def login():
-    url = "https://punchsub.com/login"
-
-    username = plugin.get_setting("username")
-    password = plugin.get_setting("password")
-
-    payload = "login=%s&senha=%s&B1=Entrar&page=%s" % (username, password, "https://punchsub.com/principal")
-    headers = {
-        'content-type': "application/x-www-form-urlencoded",
-        'cache-control': "no-cache",
-        "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
-        }
-
-    session = requests.Session()
-    session.request("POST", url, data=payload, headers=headers)
-    return session.cookies
-
+    return punch.login()
 
 @plugin.mem_cached(30)
 def get_animes():
-    return requests.get('https://punchsub.zlx.com.br/lista-de-animes').json()
+    return punch.get_animes()
 
 @plugin.mem_cached(30)
 def get_episodes(id):
-    url = ('https://punchsub.zlx.com.br/listar/%s/episodios/hd' % (id))
-    return requests.get(url).json()
+    return punch.get_episodes(id)
 
 @plugin.action()
 def root():
@@ -81,7 +67,7 @@ def list_by_letter(params):
 
 @plugin.action()
 def list_all():
-    animes = get_animes()
+    animes = punch.get_animes()
 
     return build_anime_list(animes)
 
@@ -104,7 +90,7 @@ def letters():
 
 @plugin.action()
 def view(params):
-    episodes = get_episodes(params.id)
+    episodes = punch.get_episodes(params.id)
 
     episodes_list = []
     for episode in episodes["e"]:
@@ -123,20 +109,7 @@ def view(params):
 
 @plugin.action()
 def play(params):
-    cookies = login()
-
-    headers = {
-        'user-agent': "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0",
-        'content-type': "application/x-www-form-urlencoded",
-    }
-
-    payload = "ids[]="+params.id
-    resp = requests.post("https://punchsub.com/lista-episodios", headers=headers, cookies=cookies, data=payload)
-    down_link = "https://punchsub.com/%s/%s-%s-hd" % (resp.json()[params.id]["versao"], params.slug, params.number)
-
-    resp = requests.get(down_link, headers=headers, cookies=cookies, allow_redirects=False)
-
-    return resp.headers["Location"]
+    return punch.get_playable_url({"id": params.id, "slug": params.slug, "number": params.number})
 
 if __name__ == '__main__':
     plugin.run()  # Start plugin

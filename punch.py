@@ -3,38 +3,56 @@
 
 import requests
 
-def login():
-    url = "https://punchsub.com/login"
+class Punch:
+    def __init__(self, username, password):
+        self.base_url = "https://punchsub.com/"
+        self.cookies = None
+        self.username = username
+        self.password = password
 
+    def login(self):
+        url = self.base_url+"/login"
 
-    payload = "login=%s&senha=%s&B1=Entrar&page=%s" % (username, password, "https://punchsub.com/principal")
-    headers = {
-        'content-type': "application/x-www-form-urlencoded",
-        'cache-control': "no-cache",
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
+        payload = "login=%s&senha=%s&B1=Entrar&page=%s" % (self.username, self.password, "https://punchsub.com/principal")
+        headers = {
+            'content-type': "application/x-www-form-urlencoded",
+            'cache-control': "no-cache",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0"
+            }
+
+        session = requests.Session()
+        session.request("POST", url, data=payload, headers=headers)
+        return session.cookies
+
+    def get_animes(self):
+        return requests.get(self.base_url+'/lista-de-animes').json()
+
+    def get_episodes(self, id):
+        url = '%s/listar/%s/episodios/hd' % (self.base_url, id)
+        return requests.get(url).json()
+
+    def get_playable_url(self, params):
+        if not self.cookies:
+            self.cookies = self.login()
+
+        headers = {
+            'user-agent': "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0",
+            'content-type': "application/x-www-form-urlencoded",
         }
 
-    session = requests.Session()
-    resp = session.request("POST", url, data=payload, headers=headers)
-    print "login header", resp.headers
-    print "login resp", resp.text
+        payload = "ids[]="+params["id"]
+        resp = requests.post("https://punchsub.com/lista-episodios", headers=headers, cookies=self.cookies, data=payload)
 
-    return session.cookies
+        if resp.text == "":
+            self.cookies = None
+            return self.get_playable_url(params)
 
+        down_link = "https://punchsub.com/%s/%s-%s-hd" % (resp.json()[params["id"]]["versao"], params["slug"], params["number"])
+        resp = requests.get(down_link, headers=headers, cookies=self.cookies, allow_redirects=False)
+
+        return resp.headers["Location"]
 
 if __name__ == '__main__':
-    cookies = login()
+    punch = Punch("test", "test")
+    print punch.get_playable_url({"id": "67183", "slug": "yuuki-yuuna-wa-yuusha-de-aru-yuusha-no-shou", "number":"1"})
 
-    headers = {
-        'user-agent': "Mozilla/5.0 (X11; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0",
-        'content-type': "application/x-www-form-urlencoded",
-    }
-
-    payload = "ids[]=67183"
-    resp = requests.post("https://punchsub.com/lista-episodios", headers=headers, cookies=cookies, data=payload)
-    down_link = "https://punchsub.com/%s/%s-%s-hd" % (resp.json()["67183"]["versao"], "shokugeki-no-souma-ni-no-sara-ova", "2")
-    resp = requests.get(down_link, headers=headers, cookies=cookies, allow_redirects=False)
-    print resp.status_code
-    print resp.headers["Location"]
-
-    print "resp => ", resp.text
