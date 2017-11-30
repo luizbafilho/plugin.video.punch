@@ -21,15 +21,14 @@ def build_anime_list(animes):
         animes_list.append({
             'label': anime[1],
             'url': plugin.get_url(action='view', name=anime[1], id=anime[0]),
-            'thumb': image,
-            'icon': image,
-            'poster': image
+            'art': {
+                'thumb': image,
+                'icon': image,
+                'poster': image,
+                'fanart': image,
+            },
         })
     return Plugin.create_listing(animes_list, content="tvshows",  view_mode=500)
-
-# @plugin.mem_cached(1440)
-def login():
-    return punch.login()
 
 @plugin.mem_cached(30)
 def get_animes():
@@ -66,9 +65,10 @@ def season():
     animes_list = []
     for anime in animes:
         image = anime["coverImage"]["large"]
+        title = anime["title"]["romaji"]
         animes_list.append({
-            'label': anime["title"]["romaji"],
-            'url': plugin.get_url(action='view', name="bla", id=10),
+            'label': title,
+            'url': plugin.get_url(action='search', title=title),
             'art': {
                 'thumb': image,
                 'icon': image,
@@ -81,9 +81,14 @@ def season():
                     'plot': anime['description']
                     }
                 }
-
             })
-    return Plugin.create_listing(animes_list, content="tvshows",  view_mode=500)
+    return Plugin.create_listing(animes_list, content="tvshows", view_mode=500)
+
+@plugin.action()
+def search(params):
+    anime = punch.search_anime(params.title)
+    return view_anime(anime[0])
+
 
 @plugin.action()
 def latest():
@@ -122,7 +127,10 @@ def letters():
 
 @plugin.action()
 def view(params):
-    episodes = punch.get_episodes(params.id)
+    return view_anime(params.id)
+
+def view_anime(id):
+    episodes = punch.get_episodes(id)
 
     episodes_list = []
     for episode in episodes["e"]:
@@ -130,11 +138,15 @@ def view(params):
         number = episode[1]
         slug = episodes["p"][9]
 
+        image = "https://punchsub.com/imagens/projetos/screens/%s_%s.jpg" % (id, episode[2])
         episodes_list.append({
             'label': "Episódio {}".format(number),
-            'thumb': "https://punchsub.zlx.com.br/imagens/projetos/screens/%s_%s.jpg" % (params.id, episode[2]),
             'url': plugin.get_url(action='play', id=id, slug=slug, number=number),
-            'is_playable': True
+            'is_playable': True,
+            'art': {
+                'thumb': image,
+                'icon': image,
+            },
         })
 
     return episodes_list

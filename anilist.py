@@ -36,10 +36,9 @@ query ($id: Int, $page: Int, $year: Int, $season: MediaSeason, $sort: MediaSort)
         payload = {
             "query": query,
             "variables": {
-                "year": 2017,
-                "season": "FALL",
+                "year": get_current_year(),
+                "season": get_current_season(),
                 "sort": "POPULARITY_DESC",
-                "page": 1
             }
         }
 

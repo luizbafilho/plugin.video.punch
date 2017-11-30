@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
+from fuzzywuzzy import fuzz
 
 class LoginError(Exception):
      def __init__(self, value):
@@ -38,8 +39,16 @@ class Punch:
 
     def search_anime(self, query):
         animes = self.get_animes()
+        closest = None
+        max_ratio = 0
         for anime in animes:
-            title = anime[1]
+            title = anime[1].lower()
+            ratio = fuzz.token_sort_ratio(query.lower(), title)
+            if ratio > max_ratio:
+                max_ratio = ratio
+                closest = anime
+
+        return closest
 
     def get_episodes(self, id):
         url = '%s/listar/%s/episodios/hd' % (self.base_url, id)
@@ -68,5 +77,5 @@ class Punch:
 
 if __name__ == '__main__':
     punch = Punch("test", "test")
-    print punch.get_playable_url({"id": "67183", "slug": "yuuki-yuuna-wa-yuusha-de-aru-yuusha-no-shou", "number":"1"})
+    print punch.search_anime("Boruto: Naruto Next Generations")
 
