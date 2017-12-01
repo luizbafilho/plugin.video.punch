@@ -82,11 +82,15 @@ def season():
                     }
                 }
             })
-    return Plugin.create_listing(animes_list, content="tvshows", view_mode=500)
+    return Plugin.create_listing(animes_list, content="tvshows", view_mode=50)
 
 @plugin.action()
 def search(params):
     anime = punch.search_anime(params.title)
+    if not anime:
+        xbmc.executebuiltin('Notification(%s, %s, %d)' % ("Error","Stream not found", 5000))
+        return
+
     return view_anime(anime[0])
 
 

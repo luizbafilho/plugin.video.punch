@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import requests
@@ -48,7 +47,10 @@ class Punch:
                 max_ratio = ratio
                 closest = anime
 
-        return closest
+        if max_ratio >= 90:
+            return closest
+        else:
+            return None
 
     def get_episodes(self, id):
         url = '%s/listar/%s/episodios/hd' % (self.base_url, id)
@@ -77,5 +79,7 @@ class Punch:
 
 if __name__ == '__main__':
     punch = Punch("test", "test")
-    print punch.search_anime("Boruto: Naruto Next Generations")
+    # print punch.search_anime("Boruto: Naruto Next Generations")
+    ratio = fuzz.token_sort_ratio("shigatsu wa kimi no uso", "omiai aite wa oshiego, tsuyoki na, mondaiji")
+    print "=======>", ratio
 

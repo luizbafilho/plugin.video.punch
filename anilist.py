@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from datetime import datetime
 import requests
 
@@ -39,6 +41,7 @@ query ($id: Int, $page: Int, $year: Int, $season: MediaSeason, $sort: MediaSort)
                 "year": get_current_year(),
                 "season": get_current_season(),
                 "sort": "POPULARITY_DESC",
+                "startDate": datetime.today().strftime("%Y%m%d")
             }
         }
 
@@ -78,8 +81,4 @@ if __name__ == '__main__':
     anilist = Anilist()
     # print get_current_season()
     # print get_current_year()
-    result = anilist.get_animes({})
-    animes = result["data"]["Page"]["media"]
-    for anime in animes:
-        print anime["title"]
 
